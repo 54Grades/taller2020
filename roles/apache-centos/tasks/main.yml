@@ -1,0 +1,56 @@
+---
+- name: Install Apache Software
+  yum:
+    name: httpd
+    state: latest
+
+- name: Create virtualhost config directory
+  file:
+    path: /etc/httpd/vhost.d
+    state: directory
+    mode: '0755'
+    owner: root
+
+- name: Add virtualhost config directory to hhtpd.conf
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    line: IncludeOptional vhost.d/*.conf
+  notify: restart httpd
+
+- name: Create virtualhost content directories
+  file:
+    path: "{{ item }}"
+    recurse: yes
+    state: directory
+    owner: apache
+    group: apache
+    mode: '0755'
+  loop:
+    - /var/www/{{ sitio }}
+      /var/www/{{ sitio }}/html
+      /var/www/{{ sitio }}/cgi-bin
+
+- name: Create virtualhost configuration
+  template:
+    src: templates/{{ sitio }}.j2
+    dest: /etc/httpd/vhost.d/{{ sitio }}.conf
+    owner: root
+    mode: '0644'
+  notify: restart httpd
+
+- name: Start and enable apache
+  service:
+    name: httpd
+    state: started
+    enabled: yes
+
+- name: Configure firewall
+  firewalld:
+    service: "{{ item }}"
+    state: enabled
+    permanent: yes
+    immediate: yes
+  loop:
+     - http
+     - https
+

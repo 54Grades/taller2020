@@ -1,0 +1,11 @@
+---
+- hosts: centos
+  remote_user: Ansible
+  become: yes
+  become_method: sudo
+  vars:
+    sitio: ejemplo
+    server: www.ejemplo.com.uy
+    hostmaster: admin@ejemplo.com.uy
+  roles: 
+  - role: apache-centos
